@@ -42,11 +42,11 @@ public class SignCommand  implements TabExecutor, Listener {
 
     public static boolean isValid(String arg) {
         int size = arg.split(SPLIT_LINES).length;
-        return size > 0 && size <= 4;
+        return size > 0 && size <= 8;
     }
 
     public static void rewriteSign(Block block, Sign sign, Player player, String arg) {
-        String[] lines = new String[4];
+        String[] lines = new String[8];
         String[] gotLines = arg.replaceAll("\\\\\\|", "\n").split("\\|");
         for (int i = 0; i < lines.length; i++) {
             if (i < gotLines.length) {
@@ -54,14 +54,24 @@ public class SignCommand  implements TabExecutor, Listener {
                 if (canColor(player)) {
                     line = Palette.translate(line);
                 }
-                sign.setLine(i, line);
+                switchSides(i, line, sign);
             } else {
-                sign.setLine(i, "");
+                switchSides(i, "", sign);
             }
         }
         fakeBreakEvent(block, player);
         sign.update();
         fakePlaceEvent(block, player);
+        
+        
+    }
+    
+    public static void switchSides(int line, String text, Sign sign) {
+        if (line <= 3) {
+            sign.getSide(Side.FRONT).setLine(line, text);
+        } else {
+            sign.getSide(Side.BACK).setLine(line - 4, text);
+        }
     }
 
     public static void fakePlaceEvent(Block block, Player player) {
@@ -167,82 +177,88 @@ public class SignCommand  implements TabExecutor, Listener {
                 if (args.length > 2) {
                     String arg1 = args[0];
                     String arg;
-                    if (arg1.equals("rewrite")) {
-                        arg = getArg(args, 2);
-                        if (isValid(arg)) {
-                            rewriteSign(block, sign, player, arg);
-                            sender.sendMessage(RIGHT_COLOR + "Successfully " + COLOR + "rewrote this sign!");
-                        } else {
-                            sender.sendMessage(WRONG_COLOR + "Invalid number of lines.");
-                        }
-                        return true;
-                    } else if (arg1.equals("setline")) {
-                        String arg2 = args[1];
-                        arg = getArg(args, 3);
-                        if (canColor(player)) {
-                            arg = Palette.translate(arg);
-                        }
-                        try {
-                            int lineNumber = Integer.parseInt(arg2);
-                            if (lineNumber > 0 && lineNumber <= 4) {
-                                String lastLine = sign.getSide(Side.FRONT).getLine(lineNumber - 1);
-                                sign.getSide(Side.FRONT).setLine(lineNumber - 1, arg);
-                                fakeBreakEvent(block, player);
-                                sign.update();
-                                fakePlaceEvent(block, player);
-                                if (lastLine.isEmpty()) {
-                                    sender.sendMessage(String.format("%sSet %sline %d %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, arg));
-                                } else {
-                                    sender.sendMessage(String.format("%sChanged %sline %d %sfrom %s%s %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, lastLine, COLOR, ChatColor.RESET, arg));
-                                }
-                            
-                            } if (lineNumber > 5 && lineNumber <= 8) {
-                                String lastLine = sign.getSide(Side.BACK).getLine(lineNumber - 5);
-                                sign.getSide(Side.BACK).setLine(lineNumber - 5, arg);
-                                fakeBreakEvent(block, player);
-                                sign.update();
-                                fakePlaceEvent(block, player);
-                                if (lastLine.isEmpty()) {
-                                    sender.sendMessage(String.format("%sSet %sline %d %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, arg));
-                                } else {
-                                    sender.sendMessage(String.format("%sChanged %sline %d %sfrom %s%s %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, lastLine, COLOR, ChatColor.RESET, arg));
-                                }
+                    switch (arg1) {
+                        case "rewrite" -> {
+                            arg = getArg(args, 2);
+                            if (isValid(arg)) {
+                                rewriteSign(block, sign, player, arg);
+                                sender.sendMessage(RIGHT_COLOR + "Successfully " + COLOR + "rewrote this sign!");
                             } else {
-                                sender.sendMessage(String.format("%s%s %sneeds to be a number %sbetween 1 and 8", WRONG_COLOR, arg, COLOR, RIGHT_COLOR));
+                                sender.sendMessage(WRONG_COLOR + "Invalid number of lines.");
                             }
-                        } catch (NumberFormatException e) {
-                            sender.sendMessage(String.format("%s%s %sis not a valid number.", WRONG_COLOR, arg2, COLOR));
+                            return true;
                         }
-                        return true;
-                    } else if (arg1.equals("colorline")) {
-                        if (canColor(player)) {
+                        case "setline" -> {
                             String arg2 = args[1];
-                            String arg3 = args[2];
+                            arg = getArg(args, 3);
+                            if (canColor(player)) {
+                                arg = Palette.translate(arg);
+                            }
                             try {
-                                ChatColor color = ChatColor.of(arg3);
                                 int lineNumber = Integer.parseInt(arg2);
                                 if (lineNumber > 0 && lineNumber <= 4) {
-                                    sign.getSide(Side.FRONT).setLine(lineNumber - 1, color + ChatColor.stripColor(sign.getLine(lineNumber - 1)));
+                                    String lastLine = sign.getSide(Side.FRONT).getLine(lineNumber - 1);
+                                    sign.getSide(Side.FRONT).setLine(lineNumber - 1, arg);
                                     fakeBreakEvent(block, player);
                                     sign.update();
                                     fakePlaceEvent(block, player);
-                                    sender.sendMessage(RIGHT_COLOR + "Colored" + COLOR + " line " + RIGHT_COLOR + lineNumber + " " + color + arg3 + COLOR + ".");
-                                } if (lineNumber > 5 && lineNumber <= 8) {
-                                    sign.getSide(Side.BACK).setLine(lineNumber - 5, color + ChatColor.stripColor(sign.getLine(lineNumber - 1)));
+                                    if (lastLine.isEmpty()) {
+                                        sender.sendMessage(String.format("%sSet %sline %d %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, arg));
+                                    } else {
+                                        sender.sendMessage(String.format("%sChanged %sline %d %sfrom %s%s %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, lastLine, COLOR, ChatColor.RESET, arg));
+                                    }
+                    
+                                }
+                                if (lineNumber > 5 && lineNumber <= 8) {
+                                    String lastLine = sign.getSide(Side.BACK).getLine(lineNumber - 5);
+                                    sign.getSide(Side.BACK).setLine(lineNumber - 5, arg);
                                     fakeBreakEvent(block, player);
                                     sign.update();
                                     fakePlaceEvent(block, player);
-                                    sender.sendMessage(RIGHT_COLOR + "Colored" + COLOR + " line " + RIGHT_COLOR + lineNumber + " " + color + arg3 + COLOR + ".");
+                                    if (lastLine.isEmpty()) {
+                                        sender.sendMessage(String.format("%sSet %sline %d %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, arg));
+                                    } else {
+                                        sender.sendMessage(String.format("%sChanged %sline %d %sfrom %s%s %sto %s%s", COLOR, RIGHT_COLOR, lineNumber, COLOR, ChatColor.RESET, lastLine, COLOR, ChatColor.RESET, arg));
+                                    }
                                 } else {
-                                    sender.sendMessage(WRONG_COLOR + arg2 + COLOR + " needs to be a number " + RIGHT_COLOR + "between 1 and 8");
+                                    sender.sendMessage(String.format("%s%s %sneeds to be a number %sbetween 1 and 8", WRONG_COLOR, arg, COLOR, RIGHT_COLOR));
                                 }
                             } catch (NumberFormatException e) {
-                                sender.sendMessage(WRONG_COLOR + arg2 + COLOR + " is not a valid number.");
-                            } catch (IllegalArgumentException e2) {
-                                sender.sendMessage(WRONG_COLOR + arg3 + COLOR + " is not a valid color.");
+                                sender.sendMessage(String.format("%s%s %sis not a valid number.", WRONG_COLOR, arg2, COLOR));
                             }
-                        } else {
-                            sender.sendMessage(Signage.getInstance().getString("no-permission", "{action}", "color a sign via command."));
+                            return true;
+                        }
+                        case "colorline" -> {
+                            if (canColor(player)) {
+                                String arg2 = args[1];
+                                String arg3 = args[2];
+                                try {
+                                    ChatColor color = ChatColor.of(arg3);
+                                    int lineNumber = Integer.parseInt(arg2);
+                                    if (lineNumber > 0 && lineNumber <= 4) {
+                                        sign.getSide(Side.FRONT).setLine(lineNumber - 1, color + ChatColor.stripColor(sign.getLine(lineNumber - 1)));
+                                        fakeBreakEvent(block, player);
+                                        sign.update();
+                                        fakePlaceEvent(block, player);
+                                        sender.sendMessage(RIGHT_COLOR + "Colored" + COLOR + " line " + RIGHT_COLOR + lineNumber + " " + color + arg3 + COLOR + ".");
+                                    }
+                                    if (lineNumber > 5 && lineNumber <= 8) {
+                                        sign.getSide(Side.BACK).setLine(lineNumber - 5, color + ChatColor.stripColor(sign.getLine(lineNumber - 1)));
+                                        fakeBreakEvent(block, player);
+                                        sign.update();
+                                        fakePlaceEvent(block, player);
+                                        sender.sendMessage(RIGHT_COLOR + "Colored" + COLOR + " line " + RIGHT_COLOR + lineNumber + " " + color + arg3 + COLOR + ".");
+                                    } else {
+                                        sender.sendMessage(WRONG_COLOR + arg2 + COLOR + " needs to be a number " + RIGHT_COLOR + "between 1 and 8");
+                                    }
+                                } catch (NumberFormatException e) {
+                                    sender.sendMessage(WRONG_COLOR + arg2 + COLOR + " is not a valid number.");
+                                } catch (IllegalArgumentException e2) {
+                                    sender.sendMessage(WRONG_COLOR + arg3 + COLOR + " is not a valid color.");
+                                }
+                            } else {
+                                sender.sendMessage(Signage.getInstance().getString("no-permission", "{action}", "color a sign via command."));
+                            }
                         }
                     }
                     return true;
@@ -261,7 +277,6 @@ public class SignCommand  implements TabExecutor, Listener {
         if (sender instanceof Player) {
             boolean canColor = canColor((Player) sender);
             if (args.length == 1) {
-                suggestions.add("edit");
                 suggestions.add("rewrite");
                 suggestions.add("setline");
                 if (canColor) {
@@ -269,7 +284,6 @@ public class SignCommand  implements TabExecutor, Listener {
                     suggestions.add("colorline");
                 }
                 suggestions.add("clear");
-                suggestions.add("open");
             } else if (args.length == 2) {
                 String arg1 = args[0];
                 if (arg1.matches("setline|colorline")) {
