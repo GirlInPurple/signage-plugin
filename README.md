@@ -1,13 +1,17 @@
 # Signage (Legacy UltraVanilla Plugin Fork)
 
-This is a hard fork of the Legacy UltraVanilla plugin, removing most of the existing code and leaving behind only the `/sign` command, which has been completely rewritten.
+This is a hard fork of the [Legacy UltraVanilla plugin](https://github.com/UltraVanilla/UltraVanilla),
+removing most of the existing code and leaving behind only the `/sign` command, which has been partly rewritten.
 
-This was done due to the fact that the UV plugin is about to be rewritten, and I wasn't going to attempt to port
-a plugin from 3 major versions (1.19) ago to the newest version (1.21) to access a single API method
+This was done due to the fact that the UV plugin is planned to be rewritten, and I wasn't going to attempt to port
+a plugin from 2 major versions ago to the newest version to access a single API method
 (the `.side()` method on signs), especially when I'm new to plugin development.
 Instead I removed what wasn't needed and updated the command.
+
 This plugin does not need the UV plugin to run, and is fully self contained. Feel free to use this on your server if you like.
 Once the UV plugin is rewritten this fork will be added to the new repo and this will be archived.
+
+I may consider adding the features from [Powered Signs](https://github.com/GirlInPurple/powered-signs) if people are interested.
 
 ## Build
 
